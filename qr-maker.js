@@ -2,6 +2,8 @@ const { createCanvas, loadImage } = require("canvas");
 const QRCode = require("qrcode");
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
+const PDF = require("sharp-pdf");
 
 const folderPath = "./qrcodes";
 
@@ -15,9 +17,9 @@ fs.readdir(folderPath, (err, files) => {
   fileNames = files;
   console.log("files", files);
   console.log(fileNames);
-  files.forEach(async (file) => {
-    await createImage(file).catch(console.error);
-  });
+  // files.forEach(async (file) => {
+  createImage(files[0]).catch(console.error);
+  // });
   //   // Iterate over the files in the folder
   //   files.forEach((file) => {
   //     // Get the full path of the file
@@ -40,9 +42,9 @@ fs.readdir(folderPath, (err, files) => {
 
 async function createImage(text) {
   // Load background image
-  const bg = await loadImage("images/bg.jpg");
+  const bg = await loadImage("images/bg.jpeg");
   // Create canvas with the same dimensions as the background image
-  const canvas = createCanvas(bg.width, bg.height, "pdf");
+  const canvas = createCanvas(bg.width, bg.height);
   const ctx = canvas.getContext("2d");
   // Draw background image on canvas
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
@@ -55,8 +57,8 @@ async function createImage(text) {
   // Draw QR code image at the center
   ctx.drawImage(
     qrCodeImage,
-    300,
-    500,
+    230,
+    450,
     qrCodeImage.width / 2,
     qrCodeImage.height / 2
   );
@@ -69,11 +71,26 @@ async function createImage(text) {
   ctx.fillStyle = "black";
   const upiId = text?.split(".png")[0];
   ctx.fillText(upiId, textX, textY);
+
+  const data = await sharp(canvas.toBuffer())
+    .withMetadata({ density: 300 })
+    .toFile("output.pdf")
+    .then((info) => {
+      console.log("success", info);
+    })
+    .catch((err) => {
+      console.log("err", err);
+    });
+
+  PDF.sharpsToPdf([sharp("./output.jpg")], "./output.pdf").then(({ size }) => {
+    console.log(size);
+  });
+  console.log("sharpdata", data);
   // Save the result as 'result.jpg'
-  const out = fs.createWriteStream(`./output/${upiId}.pdf`);
-  const stream = canvas.createPDFStream();
-  stream.pipe(out);
-  out.on("finish", () => console.log("The image was created successfully."));
+  // const out = fs.createWriteStream(`./output/${upiId}.jpg`);
+  // const stream = data.createJPEGStream();
+  // stream.pipe(out);
+  // out.on("finish", () => console.log("The image was created successfully."));
 }
 // Example usage: Generate QR code for the given text and overlay it onto the background image
 // const text = "merchantqr.0mcraohp@digikhata"; // Replace this with the desired URL or text
