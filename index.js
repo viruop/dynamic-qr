@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 
 const folderPath = "./qrcodes";
 const dir = "./output";
+const batchSize = 1000; // Process 1000 files at a time
 
 readdir(folderPath, async (err, files) => {
   const startTime = performance.now();
@@ -13,12 +14,16 @@ readdir(folderPath, async (err, files) => {
     return;
   }
   const bg = await loadImage("images/bg.jpeg");
-  await Promise.allSettled(
-    files.map(async (file) => {
-      if (file.includes(".DS_Store")) return;
-      await createImage(file, bg).catch(console.error);
-    })
-  );
+  const totalFiles = files.length;
+  let processedFiles = 0;
+
+  // Batch processing loop
+  while (processedFiles < totalFiles) {
+    const batchFiles = files.slice(processedFiles, processedFiles + batchSize);
+    await processBatch(batchFiles, bg);
+    processedFiles += batchSize;
+  }
+
   console.log("Folder created successfully");
   const endTime = performance.now();
   const timeTaken = endTime - startTime;
@@ -28,6 +33,20 @@ readdir(folderPath, async (err, files) => {
   console.log(`Time taken: ${minutes}:${sec} minutes`);
 });
 
+async function processBatch(batchFiles, bg) {
+  await Promise.allSettled(
+    batchFiles.map(async (file) => {
+      if (file.includes(".DS_Store")) return;
+
+      try {
+        await createImage(file, bg);
+      } catch (error) {
+        console.error("Error creating image:", error);
+      }
+    })
+  );
+}
+
 async function createImage(text, bg) {
   // Create canvas with the same dimensions as the background image
   const canvas = createCanvas(bg.width, bg.height);
@@ -35,7 +54,7 @@ async function createImage(text, bg) {
   // Draw background image on canvas
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
   // Generate QR code based on input text
-  const qrCodeImage = await loadImage(`./qrcodes/${text}`);
+  const qrCodeImage = await loadImage(`${folderPath}/${text}`);
   // Draw QR code image at the center
   ctx.drawImage(
     qrCodeImage,
