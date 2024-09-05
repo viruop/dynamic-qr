@@ -13,7 +13,7 @@ readdir(folderPath, async (err, files) => {
     console.error("Error reading folder:", err);
     return;
   }
-  const bg = await loadImage("images/bg.jpeg");
+  const bg = await loadImage("images/bg.jpg");
   const totalFiles = files.length;
   let processedFiles = 0;
 
@@ -58,15 +58,15 @@ async function createImage(text, bg) {
   // Draw QR code image at the center
   ctx.drawImage(
     qrCodeImage,
-    220,
-    450,
-    qrCodeImage.width / 2,
-    qrCodeImage.height / 2
+    100,
+    800,
+    qrCodeImage.width / 1.2,
+    qrCodeImage.height / 1.2
   );
   // Add text below the QR code
-  const fontSize = 36;
+  const fontSize = 56;
   const textX = canvas.width / 2;
-  const textY = -150 + qrCodeImage.height + fontSize + 10; // Add some padding below the QR code
+  const textY = 600 + qrCodeImage.height + fontSize + 10; // Add some padding below the QR code
   ctx.font = `${fontSize}px Arial`;
   ctx.textAlign = "center";
   ctx.fillStyle = "black";
@@ -74,7 +74,7 @@ async function createImage(text, bg) {
   ctx.fillText(upiId, textX, textY);
 
   const containerWidth = 4.134;
-  const containerHeight = 6.024;
+  const containerHeight = 8.256;
 
   var doc = new jsPDF({
     orientation: "p",
